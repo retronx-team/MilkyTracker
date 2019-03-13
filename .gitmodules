@@ -11,3 +11,6 @@
 [submodule "zziplib"]
 	path = src/submodules/zziplib
 	url = https://github.com/dwhinham/zziplib.git
+[submodule "platforms/nx/switch-homebrew-toolchain-cmake"]
+	path = platforms/nx/switch-homebrew-toolchain-cmake
+	url = https://github.com/jfmherokiller/switch-homebrew-toolchain-cmake

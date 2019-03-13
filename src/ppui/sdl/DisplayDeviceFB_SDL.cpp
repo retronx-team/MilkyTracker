@@ -31,6 +31,10 @@
 #include "DisplayDeviceFB_SDL.h"
 #include "Graphics.h"
 
+#ifdef __SWITCH__
+#include <nxhooks.h>
+#endif
+
 PPDisplayDeviceFB::PPDisplayDeviceFB(pp_int32 width,
 									 pp_int32 height, 
 									 pp_int32 scaleFactor,
@@ -64,10 +68,11 @@ PPDisplayDeviceFB::PPDisplayDeviceFB(pp_int32 width,
 		exit(EXIT_FAILURE);
 	}
 
-#ifdef HIDPI_SUPPORT
+#if defined(HIDPI_SUPPORT)
 	// Feed SDL_RenderSetLogicalSize() with output size, not GUI surface size, otherwise mouse coordinates will be wrong for Hi-DPI
 	int rendererW, rendererH;
 	SDL_GetRendererOutputSize(theRenderer, &rendererW, &rendererH);
+	printf("SDL[HiDPI]: Renderer output size is %dx%d.\n", rendererW, rendererH);
 #endif
 
 	// Log renderer capabilities
@@ -81,14 +86,18 @@ PPDisplayDeviceFB::PPDisplayDeviceFB(pp_int32 width,
 	}
 
 	// Lock aspect ratio and scale the UI up to fit the window
-#ifdef HIDPI_SUPPORT
+#if defined(HIDPI_SUPPORT)
 	SDL_RenderSetLogicalSize(theRenderer, rendererW, rendererH);
+	printf("SDL[HiDPI]: Logical Render size is %dx%d.\n", rendererW, rendererH);
 #else
 	SDL_RenderSetLogicalSize(theRenderer, realWidth, realHeight);
+	printf("SDL: Logical Render size is %dx%d.\n", realWidth, realHeight);
 #endif
 
+#ifndef __SWITCH__
 	// Use linear filtering for the scaling (make this optional eventually)
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#endif
 
 	// Create surface for rendering graphics
 	theSurface = SDL_CreateRGBSurface(0, realWidth, realHeight, bpp == -1 ? 32 : bpp, 0, 0, 0, 0);
@@ -167,6 +176,7 @@ PPDisplayDeviceFB::PPDisplayDeviceFB(pp_int32 width,
 	}
 	
 	currentGraphics->lock = true;
+	nxHooksSDLCursorInit(theRenderer);
 }
 
 PPDisplayDeviceFB::~PPDisplayDeviceFB()
@@ -226,6 +236,9 @@ void PPDisplayDeviceFB::update()
 	SDL_UpdateTexture(theTexture, NULL, theSurface->pixels, theSurface->pitch);
 	SDL_RenderClear(theRenderer);
 	SDL_RenderCopy(theRenderer, theTexture, NULL, NULL);
+	#ifdef __SWITCH__
+	nxHooksSDLCursorRender();
+	#endif
 	SDL_RenderPresent(theRenderer);
 }
 
@@ -255,6 +268,9 @@ void PPDisplayDeviceFB::update(const PPRect& r)
 	SDL_UpdateTexture(theTexture, &r3, surfaceOffset, theSurface->pitch);
 	SDL_RenderClear(theRenderer);
 	SDL_RenderCopy(theRenderer, theTexture, NULL, NULL);
+	#ifdef __SWITCH__
+	nxHooksSDLCursorRender();
+	#endif
 	SDL_RenderPresent(theRenderer);
 }
 

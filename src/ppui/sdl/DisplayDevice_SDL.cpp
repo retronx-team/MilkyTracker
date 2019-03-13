@@ -23,6 +23,10 @@
 #include "DisplayDevice_SDL.h"
 #include "Graphics.h"
 
+#ifdef __SWITCH__
+#include <nxhooks.h>
+#endif
+
 SDL_Window* PPDisplayDevice::CreateWindow(pp_int32& w, pp_int32& h, pp_int32& bpp, Uint32 flags)
 {
 	char rendername[256] = { 0 };
@@ -47,10 +51,18 @@ SDL_Window* PPDisplayDevice::CreateWindow(pp_int32& w, pp_int32& h, pp_int32& bp
 	}
 
 	// Create SDL window
+#ifdef __SWITCH__
+	SDL_Window* theWindow = SDL_CreateWindow("MilkyTracker", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, NX_SCREEN_WIDTH, NX_SCREEN_HEIGHT, SDL_WINDOW_OPENGL | flags);
+#else
 	SDL_Window* theWindow = SDL_CreateWindow("MilkyTracker", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_OPENGL | flags);
+#endif
 
 	if (theWindow == NULL)
 	{
+#ifdef __SWITCH__
+		fprintf(stderr, "SDL: SDL_CreateWindow (width: %d, height: %d) failed: %s\n", NX_SCREEN_WIDTH, NX_SCREEN_HEIGHT, SDL_GetError());
+		return NULL;
+#else
 		fprintf(stderr, "SDL: SDL_CreateWindow (width: %d, height: %d) failed: %s\n", w, h, SDL_GetError());
 		fprintf(stderr, "Retrying with default size...");
 
@@ -65,6 +77,7 @@ SDL_Window* PPDisplayDevice::CreateWindow(pp_int32& w, pp_int32& h, pp_int32& bp
 			fprintf(stderr, "Giving up.\n");
 			return NULL;
 		}
+#endif
 	}
 
 	SDL_GLContext ctx = SDL_GL_CreateContext(theWindow);
@@ -82,9 +95,12 @@ SDL_Window* PPDisplayDevice::CreateWindow(pp_int32& w, pp_int32& h, pp_int32& bp
 		fprintf(stdout, "Extensions : %s\n", glGetStringAPI(GL_EXTENSIONS));
 #endif
 	}
+
+#ifndef __SWITCH__
 	// Prevent window from being resized below minimum
 	SDL_SetWindowMinimumSize(theWindow, w, h);
 	fprintf(stderr, "SDL: Minimum window size set to %dx%d.\n", w, h);
+#endif
 
 	return theWindow;
 }
@@ -256,19 +272,31 @@ void PPDisplayDevice::setMouseCursor(MouseCursorTypes type)
 	{
 		case MouseCursorTypeStandard:
 			SDL_SetCursor(cursorStandard);
+#ifdef __SWITCH__
+			nxHooksSDLCursorSet(NXHooksSDLCursor_Pointer);
+#endif
 			break;
 			
 		case MouseCursorTypeResizeLeft:
 		case MouseCursorTypeResizeRight:
 			SDL_SetCursor(cursorResizeHoriz);
+#ifdef __SWITCH__
+			nxHooksSDLCursorSet(NXHooksSDLCursor_ResizeHoriz);
+#endif
 			break;
 	
 		case MouseCursorTypeHand:
 			SDL_SetCursor(cursorHand);
+#ifdef __SWITCH__
+			nxHooksSDLCursorSet(NXHooksSDLCursor_Hand);
+#endif
 			break;
 
 		case MouseCursorTypeWait:
 			SDL_SetCursor(cursorEggtimer);
+#ifdef __SWITCH__
+			nxHooksSDLCursorSet(NXHooksSDLCursor_Busy);
+#endif
 			break;
 	}
 }

@@ -37,6 +37,10 @@
 #include "DialogBase.h"
 #include "PPMutex.h"
 
+#ifdef __SWITCH__
+#include <nxhooks.h>
+#endif
+
 void processSDLEvents(const SDL_Event& event);
 void processSDLUserEvents(const SDL_UserEvent& event);
 
@@ -93,36 +97,50 @@ PPModalDialog::ReturnCodes SDL_runModalLoop(PPScreen* screen, PPDialogBase* dial
 		globalMutex->unlock();
 
 	// Create our own event loop
-	while (!exitModalLoop && SDL_WaitEvent(&event)) 
+	while (!exitModalLoop)
 	{
-		switch (event.type) 
-		{
-			case SDL_MOUSEMOTION:
+#ifdef __SWITCH__
+		while(nxHooksSDLPollEvents(&event)) {
+#else
+		while(SDL_PollEvent(&event)) {
+#endif
+			switch (event.type)
 			{
-				// ignore old mouse motion events in the event queue
-				SDL_Event new_event;
-				
-				if (SDL_PeepEvents(&new_event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0)
+				case SDL_MOUSEMOTION:
 				{
-					while (SDL_PeepEvents(&new_event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0);
-					processSDLEvents(new_event);
-				} 
-				else 
-				{
+#ifdef __SWITCH__
+					nxHooksSDLCursorSetPos(event.motion.x, event.motion.y);
 					processSDLEvents(event);
+#else
+					// Ignore old mouse motion events in the event queue
+					SDL_Event new_event;
+
+					if (SDL_PeepEvents(&new_event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0)
+					{
+						while (SDL_PeepEvents(&new_event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0);
+						processSDLEvents(new_event);
+					}
+					else
+					{
+						processSDLEvents(event);
+					}
+#endif
+					break;
 				}
-				break;
+
+				case SDL_USEREVENT:
+					processSDLUserEvents((const SDL_UserEvent&)event);
+					break;
+
+				default:
+					processSDLEvents(event);
+					break;
 			}
-			
-			case SDL_USEREVENT:
-				processSDLUserEvents((const SDL_UserEvent&)event);
-				break;
-			
-			default:
-				processSDLEvents(event);
-				break;
 		}
-	}	
+		#ifdef __SWITCH__
+				screen->update();
+		#endif
+	}
 
 	// pretend nothing happened at all, continue with main event loop after we're finished here
 	if (globalMutex)

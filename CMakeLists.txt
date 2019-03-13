@@ -27,7 +27,7 @@ include(GNUInstallDirs)
 
 # Force SDL if requested
 option(FORCESDL "Force SDL instead of native" OFF)
-if(FORCESDL)
+if(FORCESDL OR NX)
     unset(APPLE)
     unset(WIN32)
     add_definitions(-D__FORCE_SDL_AUDIO__)
@@ -165,14 +165,14 @@ else()
     find_package(SDL2 2 REQUIRED)
 endif()
 
-# Prefer static linkage under OS X for libraries located with find_package()
-if(APPLE)
+# Prefer static linkage under OS X/NX for libraries located with find_package()
+if(APPLE OR NX)
     set(SUFFIXES_ORIG ${CMAKE_FIND_LIBRARY_SUFFIXES})
     set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
 
 # Under macOS and Windows we use Git Submodules to locate the decompression libs
-if(UNIX)
+if(UNIX OR NX)
     # zlib is provided by Linux and macOS
     find_package(ZLIB)
 
@@ -203,8 +203,14 @@ if(UNIX)
 endif()
 
 # Restore library suffixes
-if(APPLE)
+if(APPLE OR NX)
     set(CMAKE_FIND_LIBRARY_SUFFIXES ${SUFFIXES_ORIG})
+endif()
+
+if(NX)
+    include_directories(platforms/nx/nxhooks/include)
+    add_subdirectory(platforms/nx/nxhooks)
+    add_definitions(-D__LOWRES__)
 endif()
 
 add_subdirectory(docs)

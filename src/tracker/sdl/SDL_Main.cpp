@@ -67,6 +67,11 @@
 
 #include <SDL.h>
 #include "SDL_KeyTranslation.h"
+
+#ifdef __SWITCH__
+#include <nxhooks.h>
+#endif
+
 // ---------------------------- Tracker includes ----------------------------
 #include "PPUI.h"
 #include "DisplayDevice_SDL.h"
@@ -882,6 +887,9 @@ extern "C" int SDL_main(int argc, char *argv[])
 int main(int argc, char *argv[])
 #endif
 {
+#ifdef __SWITCH__
+	nxHooksInit();
+#endif
 	SDL_Event event;
 	char *loadFile = 0;
 
@@ -984,54 +992,68 @@ unrecognizedCommandLineSwitch:
 
 	// Main event loop
 	done = 0;
-	while (!done && SDL_WaitEvent(&event))
+	while (!done)
 	{
-		switch (event.type)
-		{
-			case SDL_QUIT:
-				exitSDLEventLoop(false);
-				break;
-			case SDL_MOUSEMOTION:
+#ifdef __SWITCH__
+		while(nxHooksSDLPollEvents(&event)) {
+#else
+		while(SDL_PollEvent(&event)) {
+#endif
+			switch (event.type)
 			{
-				// Ignore old mouse motion events in the event queue
-				SDL_Event new_event;
-
-				if (SDL_PeepEvents(&new_event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0)
+				case SDL_QUIT:
+					exitSDLEventLoop(false);
+					break;
+				case SDL_MOUSEMOTION:
 				{
-					while (SDL_PeepEvents(&new_event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0);
-					processSDLEvents(new_event);
-				}
-				else
-				{
+#ifdef __SWITCH__
+					nxHooksSDLCursorSetPos(event.motion.x, event.motion.y);
 					processSDLEvents(event);
+#else
+					// Ignore old mouse motion events in the event queue
+					SDL_Event new_event;
+
+					if (SDL_PeepEvents(&new_event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0)
+					{
+						while (SDL_PeepEvents(&new_event, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0);
+						processSDLEvents(new_event);
+					}
+					else
+					{
+						processSDLEvents(event);
+					}
+#endif
+					break;
 				}
-				break;
+
+				// Open modules drag 'n dropped onto MilkyTracker (currently only works on Dock icon, OSX)
+				case SDL_DROPFILE:
+					SendFile(event.drop.file);
+					SDL_free(event.drop.file);
+					break;
+
+				// Refresh GUI if window is unhidden or resized
+				case SDL_WINDOWEVENT:
+					switch (event.window.event) {
+						case SDL_WINDOWEVENT_EXPOSED:
+						case SDL_WINDOWEVENT_RESIZED:
+						case SDL_WINDOWEVENT_SHOWN:
+							myTrackerScreen->update();
+					}
+					break;
+
+				case SDL_USEREVENT:
+					processSDLUserEvents((const SDL_UserEvent&)event);
+					break;
+
+				default:
+					processSDLEvents(event);
+					break;
 			}
-
-			// Open modules drag 'n dropped onto MilkyTracker (currently only works on Dock icon, OSX)
-			case SDL_DROPFILE:
-				SendFile(event.drop.file);
-				SDL_free(event.drop.file);
-				break;
-
-			// Refresh GUI if window is unhidden or resized
-			case SDL_WINDOWEVENT:
-				switch (event.window.event) {
-                    case SDL_WINDOWEVENT_EXPOSED:
-					case SDL_WINDOWEVENT_RESIZED:
-                    case SDL_WINDOWEVENT_SHOWN:
-						myTrackerScreen->update();
-				}
-				break;
-
-			case SDL_USEREVENT:
-				processSDLUserEvents((const SDL_UserEvent&)event);
-				break;
-
-			default:
-				processSDLEvents(event);
-				break;
 		}
+#ifdef __SWITCH__
+		myTrackerScreen->update();
+#endif
 	}
 
 	ticking = false;
@@ -1049,6 +1071,10 @@ unrecognizedCommandLineSwitch:
 	globalMutex->unlock();
 	SDL_Quit();
 	delete globalMutex;
+
+#ifdef __SWITCH__
+	nxHooksExit();
+#endif
 
 	return 0;
 }

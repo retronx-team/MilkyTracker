@@ -24,12 +24,16 @@
 #define __DISPLAYDEVICEBASE_H__
 
 // Some default values
-#ifndef __LOWRES__
-	#define DISPLAYDEVICE_WIDTH 640
-	#define DISPLAYDEVICE_HEIGHT 480
-#else
+#ifdef __SWITCH__
+	#include <nxhooks.h>
+	#define DISPLAYDEVICE_WIDTH NX_DISPLAY_WIDTH
+	#define DISPLAYDEVICE_HEIGHT NX_DISPLAY_HEIGHT
+#elif defined(__LOWRES__)
 	#define DISPLAYDEVICE_WIDTH 320
 	#define DISPLAYDEVICE_HEIGHT 240
+#else
+	#define DISPLAYDEVICE_WIDTH 640
+	#define DISPLAYDEVICE_HEIGHT 480
 #endif
 
 #include "BasicTypes.h"
