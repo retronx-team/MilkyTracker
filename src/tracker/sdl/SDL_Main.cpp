@@ -650,6 +650,10 @@ void processSDLEvents(const SDL_Event& event)
 
 		case SDL_MOUSEMOTION:
 			translateMouseMoveEvent(event.motion.state, event.motion.x, event.motion.y);
+#ifdef __SWITCH__
+			nxHooksSDLCursorSetPos(event.motion.x, event.motion.y);
+			myTrackerScreen->update();
+#endif
 			break;
 
 		case SDL_MOUSEWHEEL:
@@ -1006,10 +1010,6 @@ unrecognizedCommandLineSwitch:
 					break;
 				case SDL_MOUSEMOTION:
 				{
-#ifdef __SWITCH__
-					nxHooksSDLCursorSetPos(event.motion.x, event.motion.y);
-					processSDLEvents(event);
-#else
 					// Ignore old mouse motion events in the event queue
 					SDL_Event new_event;
 
@@ -1022,7 +1022,6 @@ unrecognizedCommandLineSwitch:
 					{
 						processSDLEvents(event);
 					}
-#endif
 					break;
 				}
 
@@ -1051,9 +1050,6 @@ unrecognizedCommandLineSwitch:
 					break;
 			}
 		}
-#ifdef __SWITCH__
-		myTrackerScreen->update();
-#endif
 	}
 
 	ticking = false;

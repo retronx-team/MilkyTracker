@@ -108,10 +108,6 @@ PPModalDialog::ReturnCodes SDL_runModalLoop(PPScreen* screen, PPDialogBase* dial
 			{
 				case SDL_MOUSEMOTION:
 				{
-#ifdef __SWITCH__
-					nxHooksSDLCursorSetPos(event.motion.x, event.motion.y);
-					processSDLEvents(event);
-#else
 					// Ignore old mouse motion events in the event queue
 					SDL_Event new_event;
 
@@ -124,7 +120,6 @@ PPModalDialog::ReturnCodes SDL_runModalLoop(PPScreen* screen, PPDialogBase* dial
 					{
 						processSDLEvents(event);
 					}
-#endif
 					break;
 				}
 
@@ -137,9 +132,6 @@ PPModalDialog::ReturnCodes SDL_runModalLoop(PPScreen* screen, PPDialogBase* dial
 					break;
 			}
 		}
-		#ifdef __SWITCH__
-				screen->update();
-		#endif
 	}
 
 	// pretend nothing happened at all, continue with main event loop after we're finished here
