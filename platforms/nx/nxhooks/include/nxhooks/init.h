@@ -6,6 +6,7 @@ extern "C" {
 
 void nxHooksInit();
 void nxHooksExit();
+char* nxHooksGetInitialDirectoryName();
 
 #ifdef __cplusplus
 }

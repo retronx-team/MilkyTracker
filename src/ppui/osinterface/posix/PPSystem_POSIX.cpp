@@ -53,10 +53,19 @@
 #include <Path.h>
 #endif
 
+#ifdef __SWITCH__
+#include <nxhooks.h>
+#endif
+
 SYSCHAR System::buffer[PATH_MAX+1];
 
 const SYSCHAR* System::getTempFileName()
 {
+#ifdef __SWITCH__
+	strcpy(buffer, nxHooksGetInitialDirectoryName());
+	strcat(buffer, "/milkytracker_temp");
+	return buffer;
+#endif
 	// Suppressed warning: "'tmpnam' is deprecated: This function is provided for
 	// compatibility reasons only. Due to security concerns inherent in the
 	// design of tmpnam(3), it is highly recommended that you use mkstemp(3)
@@ -102,6 +111,13 @@ const SYSCHAR* System::getConfigFileName()
 	strcpy(buffer, path.Path());	
 	return buffer;
 #endif
+
+#ifdef __SWITCH__
+	strcpy(buffer, nxHooksGetInitialDirectoryName());
+	strcat(buffer, "/milkytracker_config");
+	return buffer;
+#endif
+
 	char *home = getenv("HOME");
 	if(!home)
 	{
