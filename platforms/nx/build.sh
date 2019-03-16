@@ -4,6 +4,8 @@ set -eo pipefail
 
 PLATFORM_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT_DIR="$PLATFORM_DIR/../.."
+BUILD_DIR="$ROOT_DIR/build/nx"
+
 source "$PLATFORM_DIR/_env.sh"
 
 if [[ -z "$DEVKITPRO" ]]; then
@@ -17,13 +19,13 @@ fi
 
 export SDL2DIR="$DEVKITPRO/portlibs/switch"
 
-mkdir -p "$ROOT_DIR/build"
+mkdir -p "$BUILD_DIR"
 
-cd "$ROOT_DIR/build"
+cd "$BUILD_DIR"
 cmake "$ROOT_DIR" -DCMAKE_TOOLCHAIN_FILE="$PLATFORM_DIR/Toolchain.cmake"
 make $MAKE_OPTS -- milkytracker dl
 
-"$DEVKITPRO/tools/bin/nacptool" --create "$APP_TITLE" "$APP_AUTHOR" "$APP_VERSION" "$ROOT_DIR/build/milkytracker.nacp"
-"$DEVKITPRO/tools/bin/elf2nro" "$ROOT_DIR/build/src/tracker/milkytracker" "$ROOT_DIR/build/milkytracker.nro" \
-	--nacp="$ROOT_DIR/build/milkytracker.nacp" \
+"$DEVKITPRO/tools/bin/nacptool" --create "$APP_TITLE" "$APP_AUTHOR" "$APP_VERSION" "$BUILD_DIR/milkytracker.nacp"
+"$DEVKITPRO/tools/bin/elf2nro" "$BUILD_DIR/src/tracker/milkytracker" "$BUILD_DIR/milkytracker.nro" \
+	--nacp="$BUILD_DIR/milkytracker.nacp" \
 	--icon="$PLATFORM_DIR/icon.jpg"
