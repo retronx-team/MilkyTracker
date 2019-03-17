@@ -22,9 +22,9 @@ int SDL_SendMouseMotion(SDL_Window* window, int mouseID, int relative, int x, in
 int SDL_SendMouseButton(SDL_Window* window, int mouseID, uint8_t state, uint8_t button);
 int SDL_SendKeyboardKey(uint8_t state, SDL_Scancode scancode);
 
-static void _splitJoycons() {
+static void _mapJoycons() {
 	for (int i = 0; i < NX_MAX_CONTROLLERS; i++) {
-		hidSetNpadJoyAssignmentModeSingleByDefault((HidControllerID)i);
+		hidSetNpadJoyAssignmentModeDual((HidControllerID)i);
 	}
 	hidSetNpadJoyHoldType(HidJoyHoldType_Default);
 }
@@ -66,20 +66,28 @@ static void _mapControllerButton(SDL_GameControllerButton button, bool down) {
 			}
 			break;
 		case SDL_CONTROLLER_BUTTON_B: // switch A
-		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
 			SDL_SendKeyboardKey(down, SDL_SCANCODE_RETURN);
 			break;
 		case SDL_CONTROLLER_BUTTON_A: // switch B
-		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
 			SDL_SendKeyboardKey(down, SDL_SCANCODE_SPACE);
 			break;
 		case SDL_CONTROLLER_BUTTON_X: // switch Y
-		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
 			SDL_SendKeyboardKey(down, SDL_SCANCODE_LCTRL);
 			break;
 		case SDL_CONTROLLER_BUTTON_Y: // switch X
-		case SDL_CONTROLLER_BUTTON_DPAD_UP:
 			SDL_SendKeyboardKey(down, SDL_SCANCODE_LSHIFT);
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_DOWN);
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_LEFT);
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_RIGHT);
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_UP:
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_UP);
 			break;
 	}
 }
@@ -106,7 +114,7 @@ static void _fingerUpdateMouseCoords(SDL_Event* event) {
 }
 
 int nxHooksSDLPollEvents(SDL_Event* event) {
-	_splitJoycons();
+	_mapJoycons();
 	int result = SDL_PollEvent(event);
 
 	if(result) {
@@ -147,7 +155,7 @@ int nxHooksSDLPollEvents(SDL_Event* event) {
 }
 
 void nxHooksSDLInputInit() {
-	_splitJoycons();
+	_mapJoycons();
 
 	if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_TIMER) < 0) {
 		fprintf(stderr, "[nxhooks] Couldn't initialize required SDL subsystems: %s\n", SDL_GetError());

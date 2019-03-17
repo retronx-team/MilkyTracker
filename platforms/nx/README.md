@@ -16,10 +16,14 @@ MilkyTracker readme for all keyboard shortcuts available.
 * Touch screen : tap to click (hold controller L or R to right click)
 
 * Controllers shotcuts:
-	- DPAD-LEFT / Y → Keyboard CTRL
-	- DPAD-UP / X → Keyboard SHIFT
-	- DPAD-RIGHT / A → Keyboard ENTER
-	- DPAD-DOWN / B → Keyboard SPACE
+	- Y → Keyboard CTRL
+	- X → Keyboard SHIFT
+	- A → Keyboard ENTER
+	- B → Keyboard SPACE
+	- DPAD-LEFT → Keyboard LEFT
+	- DPAD-UP → Keyboard UP
+	- DPAD-RIGHT → Keyboard RIGHT
+	- DPAD-DOWN → Keyboard DOWN
 	- LB / RB → Mouse click (hold controller L or R to right click)
 	- Stick → Mouse move (pushing on the stick allows you to change speed)
 	- Plus / Minus → toggle mouse move speed
