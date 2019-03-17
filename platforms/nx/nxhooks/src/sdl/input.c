@@ -20,6 +20,7 @@ static bool g_clicktoggle_held = false;
 SDL_Window* SDL_GetFocusWindow(void);
 int SDL_SendMouseMotion(SDL_Window* window, int mouseID, int relative, int x, int y);
 int SDL_SendMouseButton(SDL_Window* window, int mouseID, uint8_t state, uint8_t button);
+int SDL_SendKeyboardKey(uint8_t state, SDL_Scancode scancode);
 
 static void _splitJoycons() {
 	for (int i = 0; i < NX_MAX_CONTROLLERS; i++) {
@@ -64,6 +65,22 @@ static void _mapControllerButton(SDL_GameControllerButton button, bool down) {
 				g_axis_fastspeed = !g_axis_fastspeed;
 			}
 			break;
+		case SDL_CONTROLLER_BUTTON_B: // switch A
+		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_RETURN);
+			break;
+		case SDL_CONTROLLER_BUTTON_A: // switch B
+		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_SPACE);
+			break;
+		case SDL_CONTROLLER_BUTTON_X: // switch Y
+		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_LCTRL);
+			break;
+		case SDL_CONTROLLER_BUTTON_Y: // switch X
+		case SDL_CONTROLLER_BUTTON_DPAD_UP:
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_LSHIFT);
+			break;
 	}
 }
 
@@ -107,7 +124,6 @@ int nxHooksSDLPollEvents(SDL_Event* event) {
 			case SDL_CONTROLLERBUTTONDOWN:
 			case SDL_CONTROLLERBUTTONUP:
 				_mapControllerButton(event->cbutton.button, event->cbutton.state);
-				SDL_Log("Controller button %s %s\n", SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event->cbutton.button), event->cbutton.state ? "pressed" : "released");
 				result = 0;
 				break;
 			case SDL_FINGERDOWN:
