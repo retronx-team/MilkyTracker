@@ -1,3 +1,5 @@
+#include "nxhooks/init.h"
+#include "nxhooks/sdl/input.h"
 #include <switch.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -39,9 +41,13 @@ void nxHooksInit() {
 	memset(g_initial_directory_name, 0, sizeof(g_initial_directory_name));
 	getcwd(g_initial_directory_name, sizeof(g_initial_directory_name));
 	printf("[nxhooks] initial_directory_name: %s\n", g_initial_directory_name);
+
+	nxHooksSDLInputInit();
 }
 
 void nxHooksExit() {
+	nxHooksSDLInputExit();
+
 	socketExit();
 	if(g_logfile != NULL) {
 		fclose(g_logfile);

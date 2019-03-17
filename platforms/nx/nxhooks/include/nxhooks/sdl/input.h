@@ -7,7 +7,8 @@ extern "C" {
 #endif
 
 int nxHooksSDLPollEvents(SDL_Event* event);
-
+void nxHooksSDLInputInit();
+void nxHooksSDLInputExit();
 #ifdef __cplusplus
 }
 #endif
