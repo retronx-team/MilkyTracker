@@ -65,6 +65,7 @@ static const char* text =
 "Heikki Orsila/Stuart Caie/Claudio Matsuoka (PowerPacker decrunching), "
 "Julian 'jua' Harnath (Haiku port), "
 "Varthall (Amiga port), "
+"p-sam (Switch port), "
 "Christopher 'Deltafire' O'Neill (current maintainer), "
 "Dale 'd0pefish' Whinham (Cocoa and SDL2 ports, current maintainer), "
 "Henri Isojarvi (GUS fixes, GUI improvements), Corvus Corax (sample editor code), David Seifert."

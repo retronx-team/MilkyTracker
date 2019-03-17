@@ -17,5 +17,9 @@ Please read the file [INSTALL.md][] for installation instructions.
 The [docs/readme_unix][] file contains notes specific to the SDL port
 of MilkyTracker.
 
+Refer to [platforms/nx/README.md][] for info specific to the Switch port of
+MilkyTracker.
+
 [INSTALL.md]:INSTALL.md
 [docs/readme_unix]:docs/readme_unix
+[platforms/nx/README.md]:platforms/nx/README.md
