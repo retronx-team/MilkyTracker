@@ -2,7 +2,6 @@
 #include <nxhooks/screen.h>
 #include <switch.h>
 #include <stdbool.h>
-#include <SDL2/SDL.h>
 
 #define NX_MAX_CONTROLLERS 8
 #define NX_AXIS_DEADZONE 3000
@@ -24,25 +23,16 @@ int SDL_SendKeyboardKey(uint8_t state, SDL_Scancode scancode);
 
 static void _mapJoycons() {
 	for (int i = 0; i < NX_MAX_CONTROLLERS; i++) {
-		hidSetNpadJoyAssignmentModeDual((HidControllerID)i);
+		hidSetNpadJoyAssignmentModeDual((HidNpadIdType)i);
 	}
-	hidSetNpadJoyHoldType(HidJoyHoldType_Default);
+	hidSetNpadJoyHoldType(HidNpadJoyHoldType_Vertical);
 }
 
 uint32_t _timerSendControllerMouseMotionEvents(uint32_t interval, void *param) {
-	SDL_Window* window = SDL_GetFocusWindow();
+	if(g_axis_x != 0 || g_axis_y != 0) {
+		int16_t speedstep = g_speedtoggle_held ? NX_AXIS_FAST_SPEEDSTEP : NX_AXIS_SLOW_SPEEDSTEP;
 
-	if(window != NULL) {
-		if(g_axis_x != 0 || g_axis_y != 0) {
-			bool fastspeed = g_axis_fastspeed;
-			if(g_speedtoggle_held) {
-				fastspeed = !fastspeed;
-			}
-
-			int16_t speedstep = fastspeed ? NX_AXIS_FAST_SPEEDSTEP : NX_AXIS_SLOW_SPEEDSTEP;
-
-			SDL_SendMouseMotion(window, SDL_TOUCH_MOUSEID, 1, g_axis_x / speedstep, g_axis_y / speedstep);
-		}
+		SDL_SendMouseMotion(NULL, SDL_TOUCH_MOUSEID, 1, g_axis_x / speedstep, g_axis_y / speedstep);
 	}
 
 	return interval;
@@ -52,7 +42,7 @@ static void _mapControllerButton(SDL_GameControllerButton button, bool down) {
 	switch(button) {
 		case SDL_CONTROLLER_BUTTON_LEFTSTICK:
 		case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
-			g_speedtoggle_held = down;
+				g_axis_fastspeed = !g_axis_fastspeed;
 			break;
 		case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
 		case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
@@ -61,8 +51,9 @@ static void _mapControllerButton(SDL_GameControllerButton button, bool down) {
 		case SDL_CONTROLLER_BUTTON_BACK:
 		case SDL_CONTROLLER_BUTTON_GUIDE:
 		case SDL_CONTROLLER_BUTTON_START:
-			if(!down) {
-				g_axis_fastspeed = !g_axis_fastspeed;
+			if(down) {
+				SDL_StopTextInput();
+				SDL_StartTextInput();
 			}
 			break;
 		case SDL_CONTROLLER_BUTTON_B: // switch A
@@ -75,7 +66,7 @@ static void _mapControllerButton(SDL_GameControllerButton button, bool down) {
 			SDL_SendKeyboardKey(down, SDL_SCANCODE_LCTRL);
 			break;
 		case SDL_CONTROLLER_BUTTON_Y: // switch X
-			SDL_SendKeyboardKey(down, SDL_SCANCODE_LSHIFT);
+			SDL_SendKeyboardKey(down, SDL_SCANCODE_BACKSPACE);
 			break;
 		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
 			SDL_SendKeyboardKey(down, SDL_SCANCODE_DOWN);
@@ -93,15 +84,11 @@ static void _mapControllerButton(SDL_GameControllerButton button, bool down) {
 }
 
 static void _SendControllerMouseClick(bool down) {
-	SDL_Window* window = SDL_GetFocusWindow();
-
-	if(window != NULL) {
-		if(down) {
-			SDL_SendMouseButton(window, SDL_TOUCH_MOUSEID, SDL_PRESSED, g_clicktoggle_held ? SDL_BUTTON_RIGHT : SDL_BUTTON_LEFT);
-		} else {
-			SDL_SendMouseButton(window, SDL_TOUCH_MOUSEID, SDL_RELEASED, SDL_BUTTON_LEFT);
-			SDL_SendMouseButton(window, SDL_TOUCH_MOUSEID, SDL_RELEASED, SDL_BUTTON_RIGHT);
-		}
+	if(down) {
+		SDL_SendMouseButton(NULL, SDL_TOUCH_MOUSEID, SDL_PRESSED, g_clicktoggle_held ? SDL_BUTTON_RIGHT : SDL_BUTTON_LEFT);
+	} else {
+		SDL_SendMouseButton(NULL, SDL_TOUCH_MOUSEID, SDL_RELEASED, SDL_BUTTON_LEFT);
+		SDL_SendMouseButton(NULL, SDL_TOUCH_MOUSEID, SDL_RELEASED, SDL_BUTTON_RIGHT);
 	}
 }
 
@@ -114,7 +101,6 @@ static void _fingerUpdateMouseCoords(SDL_Event* event) {
 }
 
 int nxHooksSDLPollEvents(SDL_Event* event) {
-	_mapJoycons();
 	int result = SDL_PollEvent(event);
 
 	if(result) {
@@ -134,20 +120,6 @@ int nxHooksSDLPollEvents(SDL_Event* event) {
 				_mapControllerButton(event->cbutton.button, event->cbutton.state);
 				result = 0;
 				break;
-			case SDL_FINGERDOWN:
-				_fingerUpdateMouseCoords(event);
-				_SendControllerMouseClick(true);
-				result = 0;
-				break;
-			case SDL_FINGERUP:
-				_fingerUpdateMouseCoords(event);
-				_SendControllerMouseClick(false);
-				result = 0;
-				break;
-			case SDL_FINGERMOTION:
-				_fingerUpdateMouseCoords(event);
-				result = 0;
-				break;
 		}
 	}
 
@@ -155,11 +127,12 @@ int nxHooksSDLPollEvents(SDL_Event* event) {
 }
 
 void nxHooksSDLInputInit() {
-	_mapJoycons();
-
+	SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "1");
 	if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_TIMER) < 0) {
 		fprintf(stderr, "[nxhooks] Couldn't initialize required SDL subsystems: %s\n", SDL_GetError());
 	}
+
+	_mapJoycons();
 
 	int numJoysticks = SDL_NumJoysticks();
 	for (int i = 0; i < NX_MAX_CONTROLLERS; i++) {
@@ -168,6 +141,7 @@ void nxHooksSDLInputInit() {
 		} else {
 			g_controllers[i] = NULL;
 		}
+		fprintf(stderr, "[nxhooks] Controller %d: %p\n", g_controllers[i]);
 	}
 
 	g_controllermouse_timer = SDL_AddTimer(16, _timerSendControllerMouseMotionEvents, NULL);

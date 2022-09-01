@@ -17,7 +17,7 @@ MilkyTracker readme for all keyboard shortcuts available.
 
 * Controllers shotcuts:
 	- Y → Keyboard CTRL
-	- X → Keyboard SHIFT
+	- X → Keyboard BACKSPACE
 	- A → Keyboard ENTER
 	- B → Keyboard SPACE
 	- DPAD-LEFT → Keyboard LEFT
@@ -26,6 +26,6 @@ MilkyTracker readme for all keyboard shortcuts available.
 	- DPAD-DOWN → Keyboard DOWN
 	- LB / RB → Mouse click (hold controller L or R to right click)
 	- Stick → Mouse move (pushing on the stick allows you to change speed)
-	- Plus / Minus → toggle mouse move speed
+	- Plus / Minus → Open on screen keyboard
 
 **Note:** USB keyboard and mouse are supported.

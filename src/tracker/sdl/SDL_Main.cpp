@@ -582,17 +582,23 @@ void preTranslateKey(SDL_Keysym& keysym)
 
 void translateTextInputEvent(const SDL_Event& event)
 {
-#ifdef DEBUG
+#ifdef __SWITCH__
 	printf ("DEBUG: Text input: %s\n", event.text.text);
+	SDL_StopTextInput();
 #endif
 
-	char character = event.text.text[0];
+	const char* c = &event.text.text[0];
 
-	// Only deal with ASCII characters
-	if (character >= 32 && character <= 127)
-	{
-		PPEvent myEvent(eKeyChar, &character, sizeof(character));
-		RaiseEventSerialized(&myEvent);
+	while(*c) {
+		char character = *c;
+
+		// Only deal with ASCII characters
+		if (character >= 32 && character <= 127)
+		{
+			PPEvent myEvent(eKeyChar, &character, sizeof(character));
+			RaiseEventSerialized(&myEvent);
+		}
+		c++;
 	}
 }
 
@@ -845,7 +851,9 @@ myDisplayDevice = new PPDisplayDeviceFB(windowSize.width, windowSize.height, sca
 	timer = SDL_AddTimer(20, timerCallback, NULL);
 
 	// Start capturing text input events
+#ifndef __SWITCH__
 	SDL_StartTextInput();
+#endif
 
 	ticking = true;
 }

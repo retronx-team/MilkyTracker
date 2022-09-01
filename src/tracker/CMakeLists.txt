@@ -377,7 +377,7 @@ if(ZLIB_FOUND)
     target_link_libraries(${TARGET_NAME} ${ZLIB_LIBRARIES})
 endif()
 
-if(UNIX OR SWITCH_LIBNX)
+if(UNIX OR NINTENDO_SWITCH)
     if(ZZIPLIB_FOUND)
         target_link_libraries(${TARGET_NAME} ${ZZIPLIB_LIBRARIES})
     endif()
